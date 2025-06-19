@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Chat AI</title>
+</head>
+
+<body>
+	<style>
+		body {
+			margin: 0;
+			font-family: sans-serif;
+			-ms-overflow-style: scrollbar;
+			overflow-style: scrollbar;
+			background-color: #000000;
+		}
+
+		main {
+			max-width: 90%;
+			margin: auto;
+			height: 100vh;
+			background-color: #000000;
+			position: relative;
+			display: flex;
+			color: rgb(106, 197, 250);
+			flex-direction: column;
+		}
+
+		.chat-box-container {
+			margin: 0;
+			width: 100%;
+			flex-grow: 1;
+			display: flex;
+			flex-direction: column;
+			height: 0;
+		}
+
+		.chat-box-header {
+			display: block;
+			text-align: center;
+		}
+
+		.chat-box {
+			margin: 4px 4px 4px 4px;
+			border: 2px solid black;
+			flex-grow: 1;
+			background-color: #000000;
+			overflow-y: scroll;
+		}
+
+		.chat-box p {
+			margin: 0;
+			padding: 6px;
+			font-size: 26px;
+		}
+
+		.ai-person-container {
+			display: block;
+			overflow: auto;
+		}
+
+		.ai,
+		.person {
+			overflow: auto;
+			margin: 4px;
+			border: 2px solid rgb(221, 8, 8);
+			border-radius: 8px;
+			display: inline-block;
+		}
+
+		.ai {
+			text-align: left;
+			border-color: rgb(55, 98, 138);
+			color: rgb(255, 255, 255);
+			background-color: #69aaff63;
+			float: left;
+			border-bottom-left-radius: 0px;
+		}
+
+		.person {
+			text-align: left;
+			margin-left: 36px;
+			border-color: rgb(64, 100, 67);
+			color: rgb(255, 255, 255);
+			background-color: rgba(21, 150, 79, 0.384);
+			float: right;
+			border-bottom-right-radius: 0px;
+		}
+
+		.ai-date,
+		.person-date {
+			font-size: 15px;
+			clear: both;
+		}
+
+		.ai-date {
+			float: left;
+			margin-left: 6px;
+			color: rgb(255, 255, 255);
+		}
+
+		.person-date {
+			float: right;
+			margin-right: 6px;
+			color: rgb(255, 255, 255);
+		}
+
+		.chat-input-container {
+			position: relative;
+			height: 60px;
+			width: 100%;
+			display: flex;
+			bottom: 0;
+			align-items: center;
+			justify-content: center;
+			overflow: auto;
+		}
+
+		.chat-input {
+			height: 40px;
+			width: auto;
+			display: inline-block;
+			flex-grow: 1;
+			padding: 2px 2px 2px 2px;
+			margin: 0 4px 0 4px;
+			font-size: 30px;
+			border: 4px solid rgb(1, 162, 211);
+			background-color: rgba(60, 118, 141, 0.582);
+		}
+
+		.chat-input:focus {
+			outline: 0;
+		}
+
+		.chat-submit {
+			width: 20%;
+			height: 47px !important;
+			padding: 2px 2px 2px 2px;
+			margin-right: 4px;
+			background-color: #1bb7cc9a;
+			font-size: 18px;
+			border: 4px solid rgb(1, 162, 211);
+		}
+
+		.chat-submit:hover {
+			cursor: pointer;
+			background-color: #06f71a8f;
+		}
+
+		.chat-submit:focus {
+			outline: 0;
+		}
+
+		@media screen and (max-width: 480px) {
+			.chat-box p {
+				font-size: 30px;
+			}
+
+			.chat-input {
+				width: 60%;
+				float: left;
+				font-size: 28px;
+			}
+
+			.chat-submit {
+				float: right;
+			}
+		}
+	</style>
+
+	<script>
+		document.addEventListener('keydown', event => {
+			if (event.key === 'Enter') {
+				send();
+			}
+		});
+
+		function chatTemplate(aiOrPerson) {
+			return (
+				`
+		<div class="ai-person-container">
+		  <div class="${aiOrPerson.class}">
+			<p>${aiOrPerson.text}</p>
+		  </div>
+		  <span class="${aiOrPerson.class}-date">${aiOrPerson.date}</span>
+		</div>
+	  `
+			);
+		}
+
+		function appendChatBox(fromPerson, textMessage) {
+
+			const submit = document.querySelector(".chat-submit");
+			const chatBox = document.querySelector(".chat-box");
+			const chatHeader = document.querySelector(".chat-box-header");
+			const date = new Date()
+
+			if (!fromPerson) {
+				date.setSeconds(date.getSeconds())
+			}
+			if (fromPerson && !textMessage.trim()) {
+				return;
+			}
+			const timestamp = date.toLocaleTimeString();
+			const newChatDiv = chatTemplate({
+				class: fromPerson ? "person" : "ai",
+				text: fromPerson ? textMessage.trim() : textMessage,
+				date: timestamp
+			});
+			if (!fromPerson) {
+				chatBox.innerHTML += newChatDiv;
+				chatBox.scrollTop = chatBox.scrollHeight;
+				isRunGenerateAnswer = false;
+			} else {
+				chatBox.innerHTML += newChatDiv;
+				chatBox.scrollTop = chatBox.scrollHeight;
+				isRunGenerateAnswer = true;
+			}
+		}
+
+		function send() {
+			const url = "/send"
+			const chatInput = document.querySelector(".chat-input");
+			const chatHeader = document.querySelector(".chat-box-header");
+			const inputValue = chatInput.value
+			chatInput.value = ""
+
+			let str_status = ''
+			let str_name = "Chat AI "
+			const countdownElement = document.getElementById('countdown');
+
+			function updateStatus() {
+				if (isRunGenerateAnswer) {
+					if (str_status.length < 3) {
+						str_status += "⚪"
+					} else {
+						str_status = "⚪"
+					}
+				} else {
+					str_status = '🟢'
+					clearInterval();
+				}
+				countdownElement.textContent = str_name + str_status;
+			}
+
+			const timerUpdateStatus = setInterval(updateStatus, 200);
+
+			appendChatBox(true, inputValue);
+
+			fetch(url, { method: "POST", body: inputValue })
+				.then(response => response.text())
+				.then(text => appendChatBox(false, text))
+				.catch(error => console.error('Ошибка:', error))
+			
+			
+		}
+
+	</script>
+
+	<main id="main">
+		<div class="chat-box-container">
+			<h1 id="countdown" class="chat-box-header">Chat AI 🟢</h1>
+			<hr width="100%">
+			<div class="chat-box">
+			</div>
+		</div>
+		<div class="chat-input-container">
+			<input class="chat-input" type="text" name="chat-input" id="chat-input" value="">
+			<button class="chat-submit" type="button" onclick="send()" name="submit">Отправить</button>
+
+		</div>
+	</main>
+</body>
+
+</html>
