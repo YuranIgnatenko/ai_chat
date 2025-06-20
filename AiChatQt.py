@@ -6,9 +6,11 @@ from PyQt5.QtCore import QUrl
 from flask import Flask, render_template, request
 from ai import get_result
 
+from threading import Thread
+
 from datetime import datetime
 
-app = Flask(__name__)
+app_flask = Flask(__name__)
 
 class Message():
 	def __init__(self, text):
@@ -17,11 +19,11 @@ class Message():
 
 pool_messages = []
 
-@app.route('/')
+@app_flask.route('/')
 def root():
 	return render_template('chat.html')
 
-@app.route('/send', methods=['post'])
+@app_flask.route('/send', methods=['post'])
 def send():
 	text = request.get_data()
 	text = str(text, encoding='utf-8')
@@ -29,8 +31,10 @@ def send():
 	pool_messages.append(new_message)
 	return pool_messages[-1].text
 
+def start_flask():
+	app_flask.run()
 
-if __name__ == '__main__':
+def start_qt():
 	app = QApplication(sys.argv)
 	window = QWidget()
 	layout = QVBoxLayout()
@@ -44,8 +48,18 @@ if __name__ == '__main__':
 	url = 'http://127.0.0.1:5000'
 	Q_URL = QUrl()
 	Q_URL.setUrl(url)
-	web_view.setUrl(Q_URL)
+	web_view.setUrl(Q_URL) # Замените данный URL на URL вашего Flask приложения
 
 	window.show()
 
 	sys.exit(app.exec_())
+
+if __name__ == '__main__':
+	# th_flask = Thread(target=start_flask)
+	# th_flask.start()
+
+	th_qt = Thread(target=start_qt)
+	th_qt.start()
+
+	start_flask()
+
