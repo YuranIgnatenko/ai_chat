@@ -27,7 +27,7 @@ def root():
 def send():
 	text = request.get_data()
 	text = str(text, encoding='utf-8')
-	new_message = Message(get_result(text))
+	new_message = Message(get_result(text)) 
 	pool_messages.append(new_message)
 	return pool_messages[-1].text
 
