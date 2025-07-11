@@ -60,6 +60,6 @@ if __name__ == '__main__':
 
 	th_qt = Thread(target=start_qt)
 	th_qt.start()
-
+	
 	start_flask()
 
