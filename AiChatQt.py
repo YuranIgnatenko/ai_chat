@@ -53,9 +53,6 @@ def start_qt():
 	sys.exit(app.exec_())
 
 if __name__ == '__main__':
-	# th_flask = Thread(target=start_flask)
-	# th_flask.start()
-
 	th_qt = Thread(target=start_qt)
 	th_qt.start()
 	
