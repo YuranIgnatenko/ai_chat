@@ -4,20 +4,19 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl
 
 from flask import Flask, render_template, request
-from ai import get_result
+from ai import AgentAi
 
 from threading import Thread
 
 from datetime import datetime
 
 app_flask = Flask(__name__)
+agent = AgentAi()
 
 class Message():
 	def __init__(self, text):
 		self.text = text
 		self.date_label = datetime.now()
-
-pool_messages = []
 
 @app_flask.route('/')
 def root():
@@ -27,12 +26,11 @@ def root():
 def send():
 	text = request.get_data()
 	text = str(text, encoding='utf-8')
-	new_message = Message(get_result(text)) 
-	pool_messages.append(new_message)
-	return pool_messages[-1].text
+	new_message = Message(agent.get_result(text)) 
+	return new_message.text
 
 def start_flask():
-	app_flask.run()
+	app_flask.run(debug=True)
 
 def start_qt():
 	app = QApplication(sys.argv)
